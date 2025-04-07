@@ -3,6 +3,8 @@ package oidc
 import (
 	"context"
 	"fmt"
+	"slices"
+	"strings"
 
 	"github.com/coreos/go-oidc/v3/oidc"
 )
@@ -14,11 +16,15 @@ const (
 
 type OIDC struct {
 	defaultProjectName string
+	allowedUsers       *[]string
+	allowedDomains     *[]string
 }
 
-func NewOIDC(defaultProjectName string) *OIDC {
+func NewOIDC(defaultProjectName string, allowedUsers *[]string, allowedDomains *[]string) *OIDC {
 	return &OIDC{
 		defaultProjectName: defaultProjectName,
+		allowedUsers:       allowedUsers,
+		allowedDomains:     allowedDomains,
 	}
 }
 
@@ -50,6 +56,10 @@ func (o *OIDC) ExtractGoogleIDToken(ctx context.Context, aud string, idToken str
 		return "", "", fmt.Errorf("verify email")
 	}
 
+	if !o.isUserAllowed(claims.Email, claims.Hd) {
+		return "", "", fmt.Errorf("user not allowed to access the service %s", claims.Email)
+	}
+
 	return o.defaultProjectName, claims.Email, nil
 }
 
@@ -72,4 +82,27 @@ func (o *OIDC) verifyGoogleOIDCToken(ctx context.Context, aud string, idToken st
 	}
 
 	return &claims, nil
+}
+
+// isUserAllowed checks if a user is allowed to access the service based on their email
+// or domain being in the allowed lists.
+func (o *OIDC) isUserAllowed(serviceAccountName, hd string) bool {
+	// First check if the user's email is in the allowed users list
+	if slices.Contains(*o.allowedUsers, serviceAccountName) {
+		return true
+	}
+
+	// If not in allowed users, check if the user's email domain is in the allowed domains list
+	parts := strings.Split(serviceAccountName, "@")
+	if len(parts) == 2 {
+		domain := parts[1]
+		if domain == "" || domain != hd {
+			return false
+		}
+		if slices.Contains(*o.allowedDomains, domain) {
+			return true
+		}
+	}
+
+	return false
 }

@@ -5,8 +5,6 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
-	"slices"
-	"strings"
 	"time"
 
 	"golang.org/x/oauth2"
@@ -39,7 +37,7 @@ func (h *Handler) HandleOAuthCallback(w http.ResponseWriter, r *http.Request) {
 	// Verify that the state matches
 	if stateCookie.Value != receivedState {
 		http.Redirect(w, r, "/", http.StatusFound)
-		slog.Info("state mismatch, redirecting to root", "receivedState", receivedState, "cookieState", stateCookie.Value)
+		slog.Debug("state mismatch, redirecting to root", "receivedState", receivedState, "cookieState", stateCookie.Value)
 		return
 	}
 
@@ -57,7 +55,7 @@ func (h *Handler) HandleOAuthCallback(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		var retrieveErr *oauth2.RetrieveError
 		if errors.As(err, &retrieveErr) {
-			slog.Info("oauth2 retrieve error, redirecting to root", "error", err)
+			slog.Debug("oauth2 retrieve error, redirecting to root", "error", err)
 			http.Redirect(w, r, "/", http.StatusFound)
 			return
 		}
@@ -76,25 +74,6 @@ func (h *Handler) HandleOAuthCallback(w http.ResponseWriter, r *http.Request) {
 	projectName, serviceAccountName, err := h.oidc.ExtractGoogleIDToken(ctx, h.oauth2Config.ClientID, idToken)
 	if err != nil {
 		h.handleError(w, r, err, http.StatusInternalServerError, "Failed to verify ID token")
-		return
-	}
-
-	// Check if the user is allowed to access the service.
-	// First check if the user's email is in the allowed users list
-	userAllowed := slices.Contains(*h.AllowedUsers, serviceAccountName)
-
-	// If not in allowed users, check if the user's email domain is in the allowed domains list
-	if !userAllowed {
-		// Extract domain from email
-		parts := strings.Split(serviceAccountName, "@")
-		if len(parts) == 2 {
-			domain := parts[1]
-			userAllowed = slices.Contains(*h.AllowedDomains, domain)
-		}
-	}
-
-	if !userAllowed {
-		h.handleError(w, r, errors.New("user not allowed"), http.StatusForbidden, "User is not allowed to access this service")
 		return
 	}
 

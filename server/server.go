@@ -29,13 +29,21 @@ type Server struct {
 
 // NewServer creates a new Server instance
 func NewServer(cfg *config.Config) (*Server, error) {
-	httpClient := &http.Client{
-		Timeout: cfg.GetTimeout(),
-	}
-
-	openaiClient := client.NewClient(cfg.GetOpenAIManagementKey(), httpClient)
-	managementClient := management.NewManagement(openaiClient, cfg.GetExpiration())
-	oidcClient := oidc.NewOIDC(cfg.GetDefaultProjectName())
+	openaiClient := client.NewClient(
+		cfg.GetOpenAIManagementKey(),
+		&http.Client{
+			Timeout: cfg.GetTimeout(),
+		},
+	)
+	managementClient := management.NewManagement(
+		openaiClient,
+		cfg.GetExpiration(),
+	)
+	oidcClient := oidc.NewOIDC(
+		cfg.GetDefaultProjectName(),
+		cfg.GetAllowedUsers(),
+		cfg.GetAllowedDomains(),
+	)
 
 	h := handler.NewHandler(
 		cfg.GetAllowedUsers(),

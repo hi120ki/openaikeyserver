@@ -14,12 +14,42 @@ import (
 func (h *Handler) HandleOAuthCallback(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
-	// Get the OAuth2 authorization code from the request.
+	// Get the OAuth2 authorization code and state from the request.
 	code := r.URL.Query().Get("code")
 	if code == "" {
 		h.handleError(w, r, errors.New("no authorization code provided"), http.StatusBadRequest, "Authorization code is required")
 		return
 	}
+
+	// Verify state to prevent CSRF attacks
+	receivedState := r.URL.Query().Get("state")
+	if receivedState == "" {
+		h.handleError(w, r, errors.New("no state provided"), http.StatusBadRequest, "State parameter is required")
+		return
+	}
+
+	// Get the state from the cookie
+	stateCookie, err := r.Cookie("oauthstate")
+	if err != nil {
+		h.handleError(w, r, err, http.StatusBadRequest, "State cookie not found")
+		return
+	}
+
+	// Verify that the state matches
+	if stateCookie.Value != receivedState {
+		http.Redirect(w, r, "/", http.StatusFound)
+		slog.Info("state mismatch, redirecting to root", "receivedState", receivedState, "cookieState", stateCookie.Value)
+		return
+	}
+
+	// Clear the state cookie
+	http.SetCookie(w, &http.Cookie{
+		Name:     "oauthstate",
+		Value:    "",
+		Path:     "/",
+		MaxAge:   -1,
+		HttpOnly: true,
+	})
 
 	// Exchange the authorization code for an access token.
 	token, err := h.oauth2Config.Exchange(ctx, code)

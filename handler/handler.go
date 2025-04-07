@@ -1,6 +1,8 @@
 package handler
 
 import (
+	"crypto/rand"
+	"encoding/base64"
 	"log/slog"
 	"net/http"
 
@@ -42,4 +44,25 @@ func NewHandler(allowedUsers *[]string, allowedDomains *[]string, clientID, clie
 func (h *Handler) handleError(w http.ResponseWriter, r *http.Request, err error, status int, msg string) {
 	slog.Error(msg, "error", err, "path", r.URL.Path, "method", r.Method)
 	http.Error(w, msg, status)
+}
+
+// generateStateOauthCookie generates a random state string and sets it in a cookie
+func (h *Handler) generateStateOauthCookie(w http.ResponseWriter, r *http.Request) (string, error) {
+	b := make([]byte, 32)
+	if _, err := rand.Read(b); err != nil {
+		return "", err
+	}
+	state := base64.URLEncoding.EncodeToString(b)
+
+	cookie := &http.Cookie{
+		Name:     "oauthstate",
+		Value:    state,
+		Path:     "/",
+		HttpOnly: true,
+		Secure:   r.TLS != nil, // Set Secure flag if using HTTPS
+		SameSite: http.SameSiteLaxMode,
+	}
+	http.SetCookie(w, cookie)
+
+	return state, nil
 }

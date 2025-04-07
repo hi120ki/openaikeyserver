@@ -6,17 +6,18 @@ import (
 	"golang.org/x/oauth2"
 )
 
+// HandleRoot initiates the OAuth2 authentication flow by redirecting to the consent page.
 func (h *Handler) HandleRoot(w http.ResponseWriter, r *http.Request) {
-	// Generate a secure random state and store it in a cookie
+	// Create and store state token in cookie
 	state, err := h.generateStateOauthCookie(w, r)
 	if err != nil {
 		h.handleError(w, r, err, http.StatusInternalServerError, "Failed to generate OAuth state")
 		return
 	}
 
-	// Generate the URL for the OAuth2 consent page with the secure state
+	// Build OAuth2 consent page URL
 	url := h.oauth2Config.AuthCodeURL(state, oauth2.AccessTypeOffline)
 
-	// http.StatusFound is general redirect code.
+	// Redirect to OAuth2 consent page
 	http.Redirect(w, r, url, http.StatusFound)
 }

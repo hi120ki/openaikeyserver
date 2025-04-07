@@ -8,6 +8,7 @@ import (
 	"github.com/kelseyhightower/envconfig"
 )
 
+// Config holds application configuration loaded from environment variables.
 type Config struct {
 	AllowedUsers        string `envconfig:"ALLOWED_USERS"`
 	AllowedDomains      string `envconfig:"ALLOWED_DOMAINS"`
@@ -22,6 +23,7 @@ type Config struct {
 	Timeout             int    `envconfig:"TIMEOUT" default:"10"`            // 10 seconds
 }
 
+// NewConfig creates and validates a new configuration from environment variables.
 func NewConfig() (*Config, error) {
 	config := &Config{}
 	if err := envconfig.Process("", config); err != nil {
@@ -45,10 +47,12 @@ func NewConfig() (*Config, error) {
 	return config, nil
 }
 
+// Get returns the config instance.
 func (c *Config) Get() *Config {
 	return c
 }
 
+// GetAllowedUsers returns the list of allowed user emails.
 func (c *Config) GetAllowedUsers() *[]string {
 	if c.AllowedUsers == "" {
 		empty := []string{}
@@ -58,6 +62,7 @@ func (c *Config) GetAllowedUsers() *[]string {
 	return &result
 }
 
+// GetAllowedDomains returns the list of allowed email domains.
 func (c *Config) GetAllowedDomains() *[]string {
 	if c.AllowedDomains == "" {
 		empty := []string{}
@@ -67,38 +72,47 @@ func (c *Config) GetAllowedDomains() *[]string {
 	return &result
 }
 
+// GetOpenAIManagementKey returns the OpenAI management API key.
 func (c *Config) GetOpenAIManagementKey() string {
 	return c.OpenAIManagementKey
 }
 
+// GetClientID returns the OAuth client ID.
 func (c *Config) GetClientID() string {
 	return c.ClientID
 }
 
+// GetClientSecret returns the OAuth client secret.
 func (c *Config) GetClientSecret() string {
 	return c.ClientSecret
 }
 
+// GetRedirectURI returns the OAuth redirect URI.
 func (c *Config) GetRedirectURI() string {
 	return c.RedirectURI
 }
 
+// GetDefaultProjectName returns the default OpenAI project name.
 func (c *Config) GetDefaultProjectName() string {
 	return c.DefaultProjectName
 }
 
+// GetPort returns the HTTP server port.
 func (c *Config) GetPort() string {
 	return c.Port
 }
 
+// GetExpiration returns the API key expiration duration.
 func (c *Config) GetExpiration() time.Duration {
 	return time.Duration(c.Expiration) * time.Second
 }
 
+// GetCleanupInterval returns the interval for API key cleanup operations.
 func (c *Config) GetCleanupInterval() time.Duration {
 	return time.Duration(c.CleanupInterval) * time.Second
 }
 
+// GetTimeout returns the HTTP client timeout duration.
 func (c *Config) GetTimeout() time.Duration {
 	return time.Duration(c.Timeout) * time.Second
 }

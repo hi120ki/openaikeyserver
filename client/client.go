@@ -11,23 +11,19 @@ import (
 	"net/url"
 )
 
-// ---------------------------
-// Structs
-// ---------------------------
-
-// HTTPClient interface for making HTTP requests.
+// HTTPClient defines the interface for making HTTP requests.
 type HTTPClient interface {
 	Do(req *http.Request) (*http.Response, error)
 }
 
-// Client for interacting with the OpenAI API.
+// Client handles interactions with the OpenAI API.
 type Client struct {
 	APIKey     string
 	HTTPClient HTTPClient
 	BaseURL    string
 }
 
-// APIError is a custom error type for API errors.
+// APIError represents an error returned by the OpenAI API.
 type APIError struct {
 	StatusCode int
 	Message    string
@@ -37,7 +33,7 @@ func (e *APIError) Error() string {
 	return fmt.Sprintf("receive api response: %s (status code: %d)", e.Message, e.StatusCode)
 }
 
-// NewClient creates a new Client with a custom HTTP client.
+// NewClient initializes a new API client with the provided credentials and HTTP client.
 func NewClient(apiKey string, httpClient HTTPClient) *Client {
 	return &Client{
 		APIKey:     apiKey,
@@ -46,6 +42,7 @@ func NewClient(apiKey string, httpClient HTTPClient) *Client {
 	}
 }
 
+// doRequest performs an HTTP request to the OpenAI API with the specified parameters.
 func (c *Client) doRequest(ctx context.Context, method string, path string, query url.Values, body interface{}) ([]byte, error) {
 	fullURL := c.BaseURL + path
 	if query != nil {

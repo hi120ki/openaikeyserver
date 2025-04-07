@@ -11,7 +11,7 @@ import (
 	"golang.org/x/oauth2"
 )
 
-// Handler holds configuration for handling OAuth2 flow
+// Handler manages OAuth2 authentication flow and API key operations.
 type Handler struct {
 	AllowedUsers   *[]string
 	AllowedDomains *[]string
@@ -20,7 +20,7 @@ type Handler struct {
 	oidc           *oidc.OIDC
 }
 
-// NewHandler creates a new Handler with the given config
+// NewHandler initializes a new handler with the provided configuration.
 func NewHandler(allowedUsers *[]string, allowedDomains *[]string, clientID, clientSecret, redirectURI string, management *management.Management, oidc *oidc.OIDC) *Handler {
 	return &Handler{
 		AllowedUsers:   allowedUsers,
@@ -40,13 +40,13 @@ func NewHandler(allowedUsers *[]string, allowedDomains *[]string, clientID, clie
 	}
 }
 
-// handleError logs the error and writes an appropriate HTTP response
+// handleError logs errors and returns appropriate HTTP responses.
 func (h *Handler) handleError(w http.ResponseWriter, r *http.Request, err error, status int, msg string) {
 	slog.Error(msg, "error", err, "path", r.URL.Path, "method", r.Method)
 	http.Error(w, msg, status)
 }
 
-// generateStateOauthCookie generates a random state string and sets it in a cookie
+// generateStateOauthCookie creates a secure random state token and stores it in a cookie.
 func (h *Handler) generateStateOauthCookie(w http.ResponseWriter, r *http.Request) (string, error) {
 	b := make([]byte, 32)
 	if _, err := rand.Read(b); err != nil {

@@ -8,6 +8,7 @@ import (
 	"strconv"
 )
 
+// Project represents an OpenAI project.
 type Project struct {
 	ID         string `json:"id"`
 	Object     string `json:"object"`
@@ -17,6 +18,7 @@ type Project struct {
 	Status     string `json:"status"`
 }
 
+// ListProjectResponse represents the response from the list projects API.
 type ListProjectResponse struct {
 	Object  string    `json:"object"`
 	Data    []Project `json:"data"`
@@ -25,7 +27,7 @@ type ListProjectResponse struct {
 	HasMore bool      `json:"has_more"`
 }
 
-// CreateProject creates a new project.
+// CreateProject creates a new OpenAI project with the specified name.
 func (c *Client) CreateProject(ctx context.Context, name string) (*Project, error) {
 	body := map[string]string{"name": name}
 	respBody, err := c.doRequest(ctx, "POST", "/projects", nil, body)
@@ -40,7 +42,7 @@ func (c *Client) CreateProject(ctx context.Context, name string) (*Project, erro
 	return &project, nil
 }
 
-// GetProject retrieves a project by its name.
+// GetProject retrieves a project by name, returning the project, a boolean indicating if it was found, and any error.
 func (c *Client) GetProject(ctx context.Context, projectName string) (*Project, bool, error) {
 	projects, err := c.listProjects(ctx, false)
 	if err != nil {
@@ -54,7 +56,7 @@ func (c *Client) GetProject(ctx context.Context, projectName string) (*Project, 
 	return nil, false, nil
 }
 
-// ListAllProjects retrieves all projects across all pages.
+// listProjects retrieves all projects, optionally including archived ones.
 func (c *Client) listProjects(ctx context.Context, includeArchived bool) (*[]Project, error) {
 	var allProjects []Project
 	var after string
@@ -75,7 +77,7 @@ func (c *Client) listProjects(ctx context.Context, includeArchived bool) (*[]Pro
 	return &allProjects, nil
 }
 
-// listProject retrieves all projects with optional pagination and filtering.
+// listProject retrieves a page of projects with pagination and filtering options.
 func (c *Client) listProject(ctx context.Context, after string, limit int, includeArchived bool) (*ListProjectResponse, error) {
 	query := url.Values{}
 	if after != "" {

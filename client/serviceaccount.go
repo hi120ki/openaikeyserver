@@ -8,6 +8,7 @@ import (
 	"strconv"
 )
 
+// ServiceAccount represents an OpenAI service account with its associated API key.
 type ServiceAccount struct {
 	ID        string `json:"id"`
 	Object    string `json:"object"`
@@ -23,6 +24,7 @@ type ServiceAccount struct {
 	} `json:"api_key"`
 }
 
+// ListServiceAccountResponse represents the response from the list service accounts API.
 type ListServiceAccountResponse struct {
 	Object  string           `json:"object"`
 	Data    []ServiceAccount `json:"data"`
@@ -31,13 +33,14 @@ type ListServiceAccountResponse struct {
 	HasMore bool             `json:"has_more"`
 }
 
+// DeletedServiceAccountResponse represents the response from the delete service account API.
 type DeletedServiceAccountResponse struct {
 	Object  string `json:"object"`
 	ID      string `json:"id"`
 	Deleted bool   `json:"deleted"`
 }
 
-// CreateServiceAccount creates a new service account in the project and returns its API key.
+// CreateServiceAccount creates a new service account in the specified project.
 func (c *Client) CreateServiceAccount(ctx context.Context, projectID string, name string) (*ServiceAccount, error) {
 	body := map[string]string{"name": name}
 	respBody, err := c.doRequest(ctx, "POST", fmt.Sprintf("/projects/%s/service_accounts", projectID), nil, body)
@@ -52,7 +55,7 @@ func (c *Client) CreateServiceAccount(ctx context.Context, projectID string, nam
 	return &sa, nil
 }
 
-// ListServiceAccounts lists all service accounts with optional pagination.
+// ListServiceAccounts retrieves all service accounts for a project.
 func (c *Client) ListServiceAccounts(ctx context.Context, projectID string) (*[]ServiceAccount, error) {
 	var allAccounts []ServiceAccount
 	var after string
@@ -73,7 +76,7 @@ func (c *Client) ListServiceAccounts(ctx context.Context, projectID string) (*[]
 	return &allAccounts, nil
 }
 
-// listServiceAccounts retrieves all service accounts with optional pagination.
+// listServiceAccounts retrieves a page of service accounts with pagination options.
 func (c *Client) listServiceAccounts(ctx context.Context, projectID string, after string, limit int) (*ListServiceAccountResponse, error) {
 	query := url.Values{}
 	if after != "" {
@@ -96,7 +99,7 @@ func (c *Client) listServiceAccounts(ctx context.Context, projectID string, afte
 	return &result, nil
 }
 
-// DeleteServiceAccount deletes a specific service account from a project.
+// DeleteServiceAccount removes a service account from a project.
 func (c *Client) DeleteServiceAccount(ctx context.Context, projectID string, serviceAccountID string) (*DeletedServiceAccountResponse, error) {
 	respBody, err := c.doRequest(ctx, "DELETE", fmt.Sprintf("/projects/%s/service_accounts/%s", projectID, serviceAccountID), nil, nil)
 	if err != nil {

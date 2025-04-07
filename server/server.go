@@ -17,7 +17,7 @@ import (
 	"github.com/hi120ki/monorepo/projects/openaikeyserver/oidc"
 )
 
-// Server represents the HTTP server
+// Server handles HTTP requests and manages the application lifecycle.
 type Server struct {
 	config     *config.Config
 	server     *http.Server
@@ -27,7 +27,7 @@ type Server struct {
 	shutdown   chan struct{}
 }
 
-// NewServer creates a new Server instance
+// NewServer initializes a new server with the provided configuration.
 func NewServer(cfg *config.Config) (*Server, error) {
 	openaiClient := client.NewClient(
 		cfg.GetOpenAIManagementKey(),
@@ -75,7 +75,7 @@ func NewServer(cfg *config.Config) (*Server, error) {
 	}, nil
 }
 
-// Start starts the server and handles graceful shutdown
+// Start launches the HTTP server and sets up graceful shutdown handling.
 func (s *Server) Start() error {
 	// Graceful shutdown setup
 	go s.handleShutdown()
@@ -93,7 +93,7 @@ func (s *Server) Start() error {
 	return nil
 }
 
-// handleShutdown handles graceful shutdown of the server
+// handleShutdown listens for termination signals and shuts down the server gracefully.
 func (s *Server) handleShutdown() {
 	sigint := make(chan os.Signal, 1)
 	signal.Notify(sigint, syscall.SIGINT, syscall.SIGTERM)
@@ -110,7 +110,7 @@ func (s *Server) handleShutdown() {
 	close(s.shutdown)
 }
 
-// startCleanupRoutine starts a goroutine that executes the CleanupAPIKey function every hour
+// startCleanupRoutine periodically runs API key cleanup based on the configured interval.
 func (s *Server) startCleanupRoutine() {
 	ticker := time.NewTicker(s.config.GetCleanupInterval())
 	defer ticker.Stop()

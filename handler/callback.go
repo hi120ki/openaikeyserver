@@ -10,38 +10,39 @@ import (
 	"golang.org/x/oauth2"
 )
 
+// HandleOAuthCallback processes OAuth2 callback requests, verifies tokens, and issues API keys.
 func (h *Handler) HandleOAuthCallback(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
-	// Get the OAuth2 authorization code and state from the request.
+	// Extract authorization code
 	code := r.URL.Query().Get("code")
 	if code == "" {
 		h.handleError(w, r, errors.New("no authorization code provided"), http.StatusBadRequest, "Authorization code is required")
 		return
 	}
 
-	// Verify state to prevent CSRF attacks
+	// Verify state parameter
 	receivedState := r.URL.Query().Get("state")
 	if receivedState == "" {
 		h.handleError(w, r, errors.New("no state provided"), http.StatusBadRequest, "State parameter is required")
 		return
 	}
 
-	// Get the state from the cookie
+	// Retrieve state cookie
 	stateCookie, err := r.Cookie("oauthstate")
 	if err != nil {
 		h.handleError(w, r, err, http.StatusBadRequest, "State cookie not found")
 		return
 	}
 
-	// Verify that the state matches
+	// Validate state parameter against cookie
 	if stateCookie.Value != receivedState {
 		http.Redirect(w, r, "/", http.StatusFound)
 		slog.Debug("state mismatch, redirecting to root", "receivedState", receivedState, "cookieState", stateCookie.Value)
 		return
 	}
 
-	// Clear the state cookie
+	// Remove state cookie
 	http.SetCookie(w, &http.Cookie{
 		Name:     "oauthstate",
 		Value:    "",
@@ -50,7 +51,7 @@ func (h *Handler) HandleOAuthCallback(w http.ResponseWriter, r *http.Request) {
 		HttpOnly: true,
 	})
 
-	// Exchange the authorization code for an access token.
+	// Exchange code for token
 	token, err := h.oauth2Config.Exchange(ctx, code)
 	if err != nil {
 		var retrieveErr *oauth2.RetrieveError
@@ -63,35 +64,34 @@ func (h *Handler) HandleOAuthCallback(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Extract the ID Token from the access token.
+	// Extract ID token
 	idToken, ok := token.Extra("id_token").(string)
 	if !ok {
 		h.handleError(w, r, errors.New("id_token not found in token response"), http.StatusInternalServerError, "Invalid token response")
 		return
 	}
 
-	// Verify the ID Token.
+	// Verify ID token and extract user info
 	projectName, serviceAccountName, err := h.oidc.ExtractGoogleIDToken(ctx, h.oauth2Config.ClientID, idToken)
 	if err != nil {
 		h.handleError(w, r, err, http.StatusInternalServerError, "Failed to verify ID token")
 		return
 	}
 
-	// Create a new API key using the management client.
+	// Generate API key
 	key, err := h.management.CreateAPIKey(ctx, projectName, serviceAccountName)
 	if err != nil {
 		h.handleError(w, r, err, http.StatusInternalServerError, "Failed to create API key")
 		return
 	}
 
-	// Calculate expiration date
+	// Calculate and format expiration time in JST
 	expirationTime := time.Now().Add(h.management.GetExpiration())
-	// Format expiration date in a user-friendly way (using Japan timezone)
 	jst, _ := time.LoadLocation("Asia/Tokyo")
 	expirationTimeJST := expirationTime.In(jst)
 	expirationDateStr := expirationTimeJST.Format("2006/01/02 15:04:05")
 
-	// Serve HTML page with copyable API key and expiration date.
+	// Render response page with API key
 	html := fmt.Sprintf(`
 <!doctype html>
 <html lang="en">

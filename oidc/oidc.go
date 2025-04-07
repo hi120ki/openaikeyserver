@@ -10,16 +10,20 @@ import (
 )
 
 const (
+	// googleTokenIssuerURL is the issuer URL for Google OIDC tokens.
 	googleTokenIssuerURL = "https://accounts.google.com"
-	googleTokenJwksURL   = "https://www.googleapis.com/oauth2/v3/certs"
+	// googleTokenJwksURL is the JWKS URL for Google OIDC tokens.
+	googleTokenJwksURL = "https://www.googleapis.com/oauth2/v3/certs"
 )
 
+// OIDC handles OpenID Connect authentication and authorization.
 type OIDC struct {
-	defaultProjectName string
-	allowedUsers       *[]string
-	allowedDomains     *[]string
+	defaultProjectName string    // Default project name for API key creation
+	allowedUsers       *[]string // List of allowed user emails
+	allowedDomains     *[]string // List of allowed email domains
 }
 
+// NewOIDC creates a new OIDC client with the specified configuration.
 func NewOIDC(defaultProjectName string, allowedUsers *[]string, allowedDomains *[]string) *OIDC {
 	return &OIDC{
 		defaultProjectName: defaultProjectName,
@@ -28,11 +32,12 @@ func NewOIDC(defaultProjectName string, allowedUsers *[]string, allowedDomains *
 	}
 }
 
-// GetDefaultProjectName returns the default project name
+// GetDefaultProjectName returns the configured default project name.
 func (o *OIDC) GetDefaultProjectName() string {
 	return o.defaultProjectName
 }
 
+// GoogleIDTokenClaims represents the claims in a Google ID token.
 type GoogleIDTokenClaims struct {
 	Aud           string `json:"aud"`
 	Azp           string `json:"azp"`
@@ -46,6 +51,8 @@ type GoogleIDTokenClaims struct {
 	Hd            string `json:"hd"`
 }
 
+// ExtractGoogleIDToken verifies a Google ID token and extracts the project name and service account email.
+// It also checks if the user is allowed to access the service.
 func (o *OIDC) ExtractGoogleIDToken(ctx context.Context, aud string, idToken string) (string, string, error) {
 	claims, err := o.verifyGoogleOIDCToken(ctx, aud, idToken)
 	if err != nil {
@@ -63,6 +70,7 @@ func (o *OIDC) ExtractGoogleIDToken(ctx context.Context, aud string, idToken str
 	return o.defaultProjectName, claims.Email, nil
 }
 
+// verifyGoogleOIDCToken verifies a Google ID token and returns its claims.
 func (o *OIDC) verifyGoogleOIDCToken(ctx context.Context, aud string, idToken string) (*GoogleIDTokenClaims, error) {
 	config := &oidc.Config{
 		ClientID: aud,
@@ -84,15 +92,14 @@ func (o *OIDC) verifyGoogleOIDCToken(ctx context.Context, aud string, idToken st
 	return &claims, nil
 }
 
-// isUserAllowed checks if a user is allowed to access the service based on their email
-// or domain being in the allowed lists.
+// isUserAllowed checks if a user is allowed based on email or domain.
 func (o *OIDC) isUserAllowed(serviceAccountName, hd string) bool {
-	// First check if the user's email is in the allowed users list
+	// Check if email is in allowed users list
 	if slices.Contains(*o.allowedUsers, serviceAccountName) {
 		return true
 	}
 
-	// If not in allowed users, check if the user's email domain is in the allowed domains list
+	// Check if domain is in allowed domains list
 	parts := strings.Split(serviceAccountName, "@")
 	if len(parts) == 2 {
 		domain := parts[1]

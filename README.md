@@ -2,6 +2,8 @@
 
 A server application that generates temporary OpenAI API keys for authorized users through Google OAuth2 authentication.
 
+![Image](https://github.com/user-attachments/assets/20d8f5a0-7c7c-499f-b7c3-313e541826aa)
+
 ## Overview
 
 This application provides a secure way to generate temporary OpenAI API keys for authorized users. It uses Google OAuth2 for authentication and the OpenAI Management API to create and manage API keys. Keys older than specified expiration time (default 24 hours) are automatically cleaned up.

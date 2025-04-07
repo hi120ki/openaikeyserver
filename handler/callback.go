@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"slices"
 	"strings"
+	"time"
 
 	"golang.org/x/oauth2"
 )
@@ -104,7 +105,14 @@ func (h *Handler) HandleOAuthCallback(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Serve HTML page with copyable API key.
+	// Calculate expiration date
+	expirationTime := time.Now().Add(h.management.GetExpiration())
+	// Format expiration date in a user-friendly way (using Japan timezone)
+	jst, _ := time.LoadLocation("Asia/Tokyo")
+	expirationTimeJST := expirationTime.In(jst)
+	expirationDateStr := expirationTimeJST.Format("2006/01/02 15:04:05")
+
+	// Serve HTML page with copyable API key and expiration date.
 	html := fmt.Sprintf(`
 <!doctype html>
 <html lang="en">
@@ -117,6 +125,7 @@ func (h *Handler) HandleOAuthCallback(w http.ResponseWriter, r *http.Request) {
 <body class="bg-light">
   <div class="container py-5">
     <h1 class="mb-4">Your OpenAI API Key</h1>
+    <p class="text-muted mb-3">Expires on: %s (JST)</p>
     <div class="mb-3">
       <textarea id="tokenBox" class="form-control" rows="4" readonly>%s</textarea>
     </div>
@@ -131,7 +140,7 @@ func (h *Handler) HandleOAuthCallback(w http.ResponseWriter, r *http.Request) {
     }
   </script>
 </body>
-</html>`, key)
+</html>`, expirationDateStr, key)
 
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	if _, err := fmt.Fprint(w, html); err != nil {

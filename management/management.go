@@ -61,3 +61,8 @@ func (m *Management) CleanupAPIKey(ctx context.Context, projectName string) erro
 	}
 	return nil
 }
+
+// GetExpiration returns the expiration duration
+func (m *Management) GetExpiration() time.Duration {
+	return m.expiration
+}

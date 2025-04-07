@@ -11,16 +11,18 @@ import (
 
 // Handler holds configuration for handling OAuth2 flow
 type Handler struct {
-	AllowedUsers *[]string
-	oauth2Config *oauth2.Config
-	management   *management.Management
-	oidc         *oidc.OIDC
+	AllowedUsers   *[]string
+	AllowedDomains *[]string
+	oauth2Config   *oauth2.Config
+	management     *management.Management
+	oidc           *oidc.OIDC
 }
 
 // NewHandler creates a new Handler with the given config
-func NewHandler(allowedUsers *[]string, clientID, clientSecret, redirectURI string, management *management.Management, oidc *oidc.OIDC) *Handler {
+func NewHandler(allowedUsers *[]string, allowedDomains *[]string, clientID, clientSecret, redirectURI string, management *management.Management, oidc *oidc.OIDC) *Handler {
 	return &Handler{
-		AllowedUsers: allowedUsers,
+		AllowedUsers:   allowedUsers,
+		AllowedDomains: allowedDomains,
 		oauth2Config: &oauth2.Config{
 			ClientID:     clientID,
 			ClientSecret: clientSecret,

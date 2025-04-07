@@ -15,14 +15,15 @@ The server provides a simple web interface for users to retrieve their keys. The
 - Google OAuth2 authentication
 - OIDC verification
 - Authorized user access control
-- Automatic API key cleanup (keys older than specified expiration time, runs every hour)
+- Automatic API key cleanup (keys older than specified expiration time, runs every cleanup interval, default 1 hour)
 - Simple web interface for key retrieval
 
 ## Environment Variables
 
 | Variable                | Description                                                           | Required | Default          |
 | ----------------------- | --------------------------------------------------------------------- | -------- | ---------------- |
-| `ALLOWED_USERS`         | Comma-separated list of email addresses allowed to access the service | Yes      | -                |
+| `ALLOWED_USERS`         | Comma-separated list of email addresses allowed to access the service | No*      | -                |
+| `ALLOWED_DOMAINS`       | Comma-separated list of domains allowed to access the service         | No*      | -                |
 | `OPENAI_MANAGEMENT_KEY` | OpenAI Management API key                                             | Yes      | -                |
 | `CLIENT_ID`             | Google OAuth2 client ID                                               | Yes      | -                |
 | `CLIENT_SECRET`         | Google OAuth2 client secret                                           | Yes      | -                |
@@ -32,6 +33,8 @@ The server provides a simple web interface for users to retrieve their keys. The
 | `EXPIRATION`            | Key expiration time in seconds                                        | No       | 86400 (24 hours) |
 | `CLEANUP_INTERVAL`      | Key cleanup interval in seconds                                       | No       | 3600 (1 hour)    |
 | `TIMEOUT`               | HTTP client timeout in seconds                                        | No       | 10               |
+
+*Note: Either `ALLOWED_USERS` or `ALLOWED_DOMAINS` (or both) must be set.
 
 ## Installation
 
@@ -55,9 +58,9 @@ go run main.go
 
 1. Access the server at `http://localhost:8080` (or your configured port)
 2. You will be redirected to Google's OAuth2 consent page
-3. After authentication, if your email is in the allowed users list, you'll receive a temporary OpenAI API key
+3. After authentication, if your email is in the allowed users list or your email domain is in the allowed domains list, you'll receive a temporary OpenAI API key
 4. The key will be valid for the specified expiration time (default 24 hours)
-5. The server will automatically clean up keys older than the expiration time (cleanup runs every hour)
+5. The server will automatically clean up keys older than the expiration time (cleanup runs every hour by default)
 
 ## OpenAI Management Key Guide
 

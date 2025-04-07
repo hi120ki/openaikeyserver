@@ -6,6 +6,7 @@ import (
 	"log/slog"
 	"net/http"
 	"slices"
+	"strings"
 
 	"golang.org/x/oauth2"
 )
@@ -48,7 +49,20 @@ func (h *Handler) HandleOAuthCallback(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Check if the user is allowed to access the service.
-	if !slices.Contains(*h.AllowedUsers, serviceAccountName) {
+	// First check if the user's email is in the allowed users list
+	userAllowed := slices.Contains(*h.AllowedUsers, serviceAccountName)
+
+	// If not in allowed users, check if the user's email domain is in the allowed domains list
+	if !userAllowed {
+		// Extract domain from email
+		parts := strings.Split(serviceAccountName, "@")
+		if len(parts) == 2 {
+			domain := parts[1]
+			userAllowed = slices.Contains(*h.AllowedDomains, domain)
+		}
+	}
+
+	if !userAllowed {
 		h.handleError(w, r, errors.New("user not allowed"), http.StatusForbidden, "User is not allowed to access this service")
 		return
 	}

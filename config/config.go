@@ -10,6 +10,7 @@ import (
 
 type Config struct {
 	AllowedUsers        string `envconfig:"ALLOWED_USERS"`
+	AllowedDomains      string `envconfig:"ALLOWED_DOMAINS"`
 	OpenAIManagementKey string `envconfig:"OPENAI_MANAGEMENT_KEY"`
 	ClientID            string `envconfig:"CLIENT_ID"`
 	ClientSecret        string `envconfig:"CLIENT_SECRET"`
@@ -26,8 +27,8 @@ func NewConfig() (*Config, error) {
 	if err := envconfig.Process("", config); err != nil {
 		return nil, fmt.Errorf("failed to process env: %w", err)
 	}
-	if config.AllowedUsers == "" {
-		return nil, fmt.Errorf("ALLOWED_USERS is required")
+	if config.AllowedUsers == "" && config.AllowedDomains == "" {
+		return nil, fmt.Errorf("either ALLOWED_USERS or ALLOWED_DOMAINS (or both) is required")
 	}
 	if config.OpenAIManagementKey == "" {
 		return nil, fmt.Errorf("OPENAI_MANAGEMENT_KEY is required")
@@ -49,7 +50,20 @@ func (c *Config) Get() *Config {
 }
 
 func (c *Config) GetAllowedUsers() *[]string {
+	if c.AllowedUsers == "" {
+		empty := []string{}
+		return &empty
+	}
 	result := strings.Split(c.AllowedUsers, ",")
+	return &result
+}
+
+func (c *Config) GetAllowedDomains() *[]string {
+	if c.AllowedDomains == "" {
+		empty := []string{}
+		return &empty
+	}
+	result := strings.Split(c.AllowedDomains, ",")
 	return &result
 }
 

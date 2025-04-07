@@ -39,6 +39,7 @@ func NewServer(cfg *config.Config) (*Server, error) {
 
 	h := handler.NewHandler(
 		cfg.GetAllowedUsers(),
+		cfg.GetAllowedDomains(),
 		cfg.GetClientID(),
 		cfg.GetClientSecret(),
 		cfg.GetRedirectURI(),

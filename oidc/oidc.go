@@ -48,10 +48,54 @@ type GoogleIDTokenClaims struct {
 	Hd            string `json:"hd"`
 }
 
+// DefaultTokenVerifier handles token verification
+type DefaultTokenVerifier struct {
+	issuerURL string
+	jwksURL   string
+}
+
+// NewDefaultTokenVerifier creates a new DefaultTokenVerifier
+func NewDefaultTokenVerifier(issuerURL, jwksURL string) *DefaultTokenVerifier {
+	return &DefaultTokenVerifier{
+		issuerURL: issuerURL,
+		jwksURL:   jwksURL,
+	}
+}
+
+// VerifyToken verifies a Google ID token and returns its claims
+func (v *DefaultTokenVerifier) VerifyToken(ctx context.Context, aud string, idToken string) (*GoogleIDTokenClaims, error) {
+	config := &oidc.Config{
+		ClientID: aud,
+	}
+
+	verifier := oidc.NewVerifier(v.issuerURL, oidc.NewRemoteKeySet(ctx, v.jwksURL), config)
+
+	token, err := verifier.Verify(ctx, idToken)
+	if err != nil {
+		return nil, err
+	}
+
+	var claims GoogleIDTokenClaims
+	if err := token.Claims(&claims); err != nil {
+		return nil, err
+	}
+
+	return &claims, nil
+}
+
+// For testing purposes
+var createTokenVerifier = func(issuerURL, jwksURL string) *DefaultTokenVerifier {
+	return NewDefaultTokenVerifier(issuerURL, jwksURL)
+}
+
 // ExtractGoogleIDToken verifies a Google ID token and extracts the project name and service account email.
 // It also checks if the user is allowed to access the service.
 func (o *OIDC) ExtractGoogleIDToken(ctx context.Context, aud string, idToken string) (string, string, error) {
-	claims, err := o.verifyGoogleOIDCToken(ctx, aud, idToken)
+	// Create verifier
+	verifier := createTokenVerifier(o.googleTokenIssuerURL, o.googleTokenJwksURL)
+
+	// Verify token
+	claims, err := verifier.VerifyToken(ctx, aud, idToken)
 	if err != nil {
 		return "", "", fmt.Errorf("verify id token: %w", err)
 	}
@@ -65,28 +109,6 @@ func (o *OIDC) ExtractGoogleIDToken(ctx context.Context, aud string, idToken str
 	}
 
 	return o.defaultProjectName, claims.Email, nil
-}
-
-// verifyGoogleOIDCToken verifies a Google ID token and returns its claims.
-func (o *OIDC) verifyGoogleOIDCToken(ctx context.Context, aud string, idToken string) (*GoogleIDTokenClaims, error) {
-	config := &oidc.Config{
-		ClientID: aud,
-	}
-
-	verifier := oidc.NewVerifier(o.googleTokenIssuerURL, oidc.NewRemoteKeySet(ctx, o.googleTokenJwksURL), config)
-
-	token, err := verifier.Verify(ctx, idToken)
-	if err != nil {
-		return nil, err
-	}
-
-	var claims GoogleIDTokenClaims
-
-	if err := token.Claims(&claims); err != nil {
-		return nil, err
-	}
-
-	return &claims, nil
 }
 
 // isUserAllowed checks if a user is allowed based on email or domain.

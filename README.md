@@ -2,6 +2,8 @@
 
 A server application that generates temporary OpenAI API keys for authorized users through Google OAuth2 authentication.
 
+[![codecov](https://codecov.io/gh/hi120ki/openaikeyserver/branch/main/graph/badge.svg)](https://codecov.io/gh/hi120ki/openaikeyserver)
+
 ![Image](https://github.com/user-attachments/assets/20d8f5a0-7c7c-499f-b7c3-313e541826aa)
 
 ## Overview

@@ -20,22 +20,23 @@ func NewManagement(client *client.Client, expiration time.Duration) *Management 
 	}
 }
 
-func (m *Management) CreateAPIKey(ctx context.Context, projectName, serviceAccountName string) (string, error) {
+func (m *Management) CreateAPIKey(ctx context.Context, projectName, serviceAccountName string) (string, *time.Time, error) {
 	project, find, err := m.client.GetProject(ctx, projectName)
 	if err != nil {
-		return "", fmt.Errorf("get project: %w", err)
+		return "", nil, fmt.Errorf("get project: %w", err)
 	}
 	if !find {
 		project, err = m.client.CreateProject(ctx, projectName)
 		if err != nil {
-			return "", fmt.Errorf("create project: %w", err)
+			return "", nil, fmt.Errorf("create project: %w", err)
 		}
 	}
 	serviceAccount, err := m.client.CreateServiceAccount(ctx, project.ID, serviceAccountName)
 	if err != nil {
-		return "", fmt.Errorf("create service account: %w", err)
+		return "", nil, fmt.Errorf("create service account: %w", err)
 	}
-	return serviceAccount.APIKey.Value, nil
+	expirationTime := time.Now().Add(m.expiration)
+	return serviceAccount.APIKey.Value, &expirationTime, nil
 }
 
 func (m *Management) CleanupAPIKey(ctx context.Context, projectName string) error {
@@ -60,9 +61,4 @@ func (m *Management) CleanupAPIKey(ctx context.Context, projectName string) erro
 		}
 	}
 	return nil
-}
-
-// GetExpiration returns the expiration duration
-func (m *Management) GetExpiration() time.Duration {
-	return m.expiration
 }

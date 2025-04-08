@@ -79,17 +79,15 @@ func (h *Handler) HandleOAuthCallback(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Generate API key
-	key, err := h.management.CreateAPIKey(ctx, projectName, serviceAccountName)
+	key, expiration, err := h.management.CreateAPIKey(ctx, projectName, serviceAccountName)
 	if err != nil {
 		h.handleError(w, r, err, http.StatusInternalServerError, "Failed to create API key")
 		return
 	}
 
 	// Calculate and format expiration time in JST
-	expirationTime := time.Now().Add(h.management.GetExpiration())
 	jst, _ := time.LoadLocation("Asia/Tokyo")
-	expirationTimeJST := expirationTime.In(jst)
-	expirationDateStr := expirationTimeJST.Format("2006/01/02 15:04:05")
+	expirationDateStr := expiration.In(jst).Format("2006/01/02 15:04:05")
 
 	// Render response page with API key
 	html := fmt.Sprintf(`

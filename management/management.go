@@ -8,12 +8,19 @@ import (
 	"github.com/hi120ki/monorepo/projects/openaikeyserver/client"
 )
 
-type Management struct {
-	client     *client.Client
-	expiration time.Duration
+// Manager defines the interface for API key management operations.
+type Manager interface {
+	CreateAPIKey(ctx context.Context, projectName, serviceAccountName string) (string, *time.Time, error)
+	CleanupAPIKey(ctx context.Context, projectName string) error
 }
 
-func NewManagement(client *client.Client, expiration time.Duration) *Management {
+// Management implements the Manager interface and handles API key operations.
+type Management struct {
+	client     client.APIClient // Client for API operations
+	expiration time.Duration    // Expiration duration for API keys
+}
+
+func NewManagement(client client.APIClient, expiration time.Duration) *Management {
 	return &Management{
 		client:     client,
 		expiration: expiration,

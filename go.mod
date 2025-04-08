@@ -1,6 +1,6 @@
 module github.com/hi120ki/monorepo/projects/openaikeyserver
 
-go 1.24.2
+go 1.24.0
 
 require (
 	github.com/coreos/go-oidc/v3 v3.14.1

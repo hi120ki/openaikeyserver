@@ -51,7 +51,10 @@ func TestCreateServiceAccount(t *testing.T) {
 			// Verify request body
 			body, _ := io.ReadAll(req.Body)
 			var requestBody map[string]string
-			json.Unmarshal(body, &requestBody)
+			if err := json.Unmarshal(body, &requestBody); err != nil {
+				t.Errorf("Failed to unmarshal request body: %v", err)
+				return nil, err
+			}
 			if requestBody["name"] != serviceAccountName {
 				t.Errorf("Expected request body to contain name=%s, got %v", serviceAccountName, requestBody)
 			}

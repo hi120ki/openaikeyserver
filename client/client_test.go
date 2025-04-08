@@ -115,7 +115,10 @@ func TestDoRequest_WithRequestBody(t *testing.T) {
 			// Verify request body
 			body, _ := io.ReadAll(req.Body)
 			var receivedBody map[string]string
-			json.Unmarshal(body, &receivedBody)
+			if err := json.Unmarshal(body, &receivedBody); err != nil {
+				t.Errorf("Failed to unmarshal request body: %v", err)
+				return nil, err
+			}
 			if receivedBody["request"] != "data" {
 				t.Errorf("Expected request body to contain %v, got %v", requestBody, receivedBody)
 			}

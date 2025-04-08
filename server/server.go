@@ -43,6 +43,8 @@ func NewServer(cfg *config.Config) (*Server, error) {
 		cfg.GetDefaultProjectName(),
 		cfg.GetAllowedUsers(),
 		cfg.GetAllowedDomains(),
+		cfg.GetGoogleTokenIssuerURL(),
+		cfg.GetGoogleTokenJwksURL(),
 	)
 
 	h := handler.NewHandler(
@@ -61,8 +63,9 @@ func NewServer(cfg *config.Config) (*Server, error) {
 	mux.HandleFunc("/revoke", h.HandleRevoke)
 
 	server := &http.Server{
-		Addr:    ":" + cfg.GetPort(),
-		Handler: mux,
+		Addr:              ":" + cfg.GetPort(),
+		Handler:           mux,
+		ReadHeaderTimeout: 10 * time.Second,
 	}
 
 	return &Server{

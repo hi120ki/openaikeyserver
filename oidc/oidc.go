@@ -9,6 +9,25 @@ import (
 	"github.com/coreos/go-oidc/v3/oidc"
 )
 
+// TokenVerifier defines the interface for token verification.
+type TokenVerifier interface {
+	VerifyToken(ctx context.Context, aud string, idToken string) (*GoogleIDTokenClaims, error)
+}
+
+// GoogleIDTokenClaims represents the claims in a Google ID token.
+type GoogleIDTokenClaims struct {
+	Aud           string `json:"aud"`            // Audience
+	Azp           string `json:"azp"`            // Authorized party
+	Email         string `json:"email"`          // User email
+	EmailVerified bool   `json:"email_verified"` // Whether email is verified
+	Exp           int    `json:"exp"`            // Expiration time
+	Iat           int    `json:"iat"`            // Issued at time
+	Iss           string `json:"iss"`            // Issuer
+	Sub           string `json:"sub"`            // Subject
+	AtHash        string `json:"at_hash"`        // Access token hash
+	Hd            string `json:"hd"`             // Hosted domain
+}
+
 // OIDC handles OpenID Connect authentication and authorization.
 type OIDC struct {
 	defaultProjectName   string    // Default project name for API key creation
@@ -34,29 +53,10 @@ func (o *OIDC) GetDefaultProjectName() string {
 	return o.defaultProjectName
 }
 
-// GoogleIDTokenClaims represents the claims in a Google ID token.
-type GoogleIDTokenClaims struct {
-	Aud           string `json:"aud"`
-	Azp           string `json:"azp"`
-	Email         string `json:"email"`
-	EmailVerified bool   `json:"email_verified"`
-	Exp           int    `json:"exp"`
-	Iat           int    `json:"iat"`
-	Iss           string `json:"iss"`
-	Sub           string `json:"sub"`
-	AtHash        string `json:"at_hash"`
-	Hd            string `json:"hd"`
-}
-
-// TokenVerifier defines the interface for token verification
-type TokenVerifier interface {
-	VerifyToken(ctx context.Context, aud string, idToken string) (*GoogleIDTokenClaims, error)
-}
-
-// DefaultTokenVerifier handles token verification
+// DefaultTokenVerifier implements the TokenVerifier interface.
 type DefaultTokenVerifier struct {
-	issuerURL string
-	jwksURL   string
+	issuerURL string // Token issuer URL
+	jwksURL   string // JSON Web Key Set URL
 }
 
 // NewDefaultTokenVerifier creates a new DefaultTokenVerifier

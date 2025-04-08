@@ -11,7 +11,12 @@ import (
 	"net/url"
 )
 
-// APIClient defines the interface for API operations
+// HTTPClient defines the interface for making HTTP requests.
+type HTTPClient interface {
+	Do(req *http.Request) (*http.Response, error)
+}
+
+// APIClient defines the interface for OpenAI API operations.
 type APIClient interface {
 	GetProject(ctx context.Context, projectName string) (*Project, bool, error)
 	CreateProject(ctx context.Context, name string) (*Project, error)
@@ -20,22 +25,17 @@ type APIClient interface {
 	DeleteServiceAccount(ctx context.Context, projectID string, serviceAccountID string) (*DeletedServiceAccountResponse, error)
 }
 
-// HTTPClient defines the interface for making HTTP requests.
-type HTTPClient interface {
-	Do(req *http.Request) (*http.Response, error)
-}
-
-// Client handles interactions with the OpenAI API.
+// Client implements the APIClient interface and handles interactions with the OpenAI API.
 type Client struct {
-	APIKey     string
-	HTTPClient HTTPClient
-	BaseURL    string
+	APIKey     string     // API key for authentication
+	HTTPClient HTTPClient // HTTP client for making requests
+	BaseURL    string     // Base URL for API endpoints
 }
 
 // APIError represents an error returned by the OpenAI API.
 type APIError struct {
-	StatusCode int
-	Message    string
+	StatusCode int    // HTTP status code
+	Message    string // Error message
 }
 
 func (e *APIError) Error() string {

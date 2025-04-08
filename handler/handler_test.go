@@ -67,12 +67,12 @@ func TestNewHandler(t *testing.T) {
 		t.Fatal("Expected non-nil Handler")
 	}
 
-	if h.AllowedUsers != allowedUsers {
-		t.Errorf("Expected AllowedUsers to be %v, got %v", allowedUsers, h.AllowedUsers)
+	if h.allowedUsers != allowedUsers {
+		t.Errorf("Expected AllowedUsers to be %v, got %v", allowedUsers, h.allowedUsers)
 	}
 
-	if h.AllowedDomains != allowedDomains {
-		t.Errorf("Expected AllowedDomains to be %v, got %v", allowedDomains, h.AllowedDomains)
+	if h.allowedDomains != allowedDomains {
+		t.Errorf("Expected AllowedDomains to be %v, got %v", allowedDomains, h.allowedDomains)
 	}
 
 	if h.oauth2Config.ClientID != clientID {

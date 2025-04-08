@@ -13,18 +13,18 @@ import (
 
 // Handler manages OAuth2 authentication flow and API key operations.
 type Handler struct {
-	AllowedUsers   *[]string
-	AllowedDomains *[]string
-	oauth2Config   *oauth2.Config
-	management     management.Manager
-	oidc           *oidc.OIDC
+	allowedUsers   *[]string          // List of allowed user emails
+	allowedDomains *[]string          // List of allowed email domains
+	oauth2Config   *oauth2.Config     // OAuth2 configuration
+	management     management.Manager // Management interface for API key operations
+	oidc           *oidc.OIDC         // OIDC client for authentication
 }
 
 // NewHandler initializes a new handler with the provided configuration.
 func NewHandler(allowedUsers *[]string, allowedDomains *[]string, clientID, clientSecret, redirectURI string, management management.Manager, oidc *oidc.OIDC) *Handler {
 	return &Handler{
-		AllowedUsers:   allowedUsers,
-		AllowedDomains: allowedDomains,
+		allowedUsers:   allowedUsers,
+		allowedDomains: allowedDomains,
 		oauth2Config: &oauth2.Config{
 			ClientID:     clientID,
 			ClientSecret: clientSecret,

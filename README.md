@@ -22,8 +22,8 @@ The server provides a simple web interface for users to retrieve their keys. The
 
 | Variable                | Description                                                           | Required | Default          |
 | ----------------------- | --------------------------------------------------------------------- | -------- | ---------------- |
-| `ALLOWED_USERS`         | Comma-separated list of email addresses allowed to access the service | No*      | -                |
-| `ALLOWED_DOMAINS`       | Comma-separated list of domains allowed to access the service         | No*      | -                |
+| `ALLOWED_USERS`         | Comma-separated list of email addresses allowed to access the service | No\*     | -                |
+| `ALLOWED_DOMAINS`       | Comma-separated list of domains allowed to access the service         | No\*     | -                |
 | `OPENAI_MANAGEMENT_KEY` | OpenAI Management API key                                             | Yes      | -                |
 | `CLIENT_ID`             | Google OAuth2 client ID                                               | Yes      | -                |
 | `CLIENT_SECRET`         | Google OAuth2 client secret                                           | Yes      | -                |
@@ -34,7 +34,7 @@ The server provides a simple web interface for users to retrieve their keys. The
 | `CLEANUP_INTERVAL`      | Key cleanup interval in seconds                                       | No       | 3600 (1 hour)    |
 | `TIMEOUT`               | HTTP client timeout in seconds                                        | No       | 10               |
 
-*Note: Either `ALLOWED_USERS` or `ALLOWED_DOMAINS` (or both) must be set.
+\*Note: Either `ALLOWED_USERS` or `ALLOWED_DOMAINS` (or both) must be set.
 
 ## Installation
 

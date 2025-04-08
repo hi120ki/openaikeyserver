@@ -1,10 +1,14 @@
 package handler
 
 import (
+	"context"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
 
+	"github.com/hi120ki/monorepo/projects/openaikeyserver/management"
+	"github.com/hi120ki/monorepo/projects/openaikeyserver/oidc"
 	"golang.org/x/oauth2"
 )
 
@@ -20,9 +24,68 @@ func (m *MockHTTPClient) Do(req *http.Request) (*http.Response, error) {
 	return nil, nil
 }
 
+// MockManagement is a mock implementation of the management.Manager interface
+type MockManagement struct {
+	CreateAPIKeyFunc  func(ctx context.Context, projectName, serviceAccountName string) (string, *time.Time, error)
+	CleanupAPIKeyFunc func(ctx context.Context, projectName string) error
+}
+
+// Ensure MockManagement implements management.Manager
+var _ management.Manager = (*MockManagement)(nil)
+
+func (m *MockManagement) CreateAPIKey(ctx context.Context, projectName, serviceAccountName string) (string, *time.Time, error) {
+	if m.CreateAPIKeyFunc != nil {
+		return m.CreateAPIKeyFunc(ctx, projectName, serviceAccountName)
+	}
+	return "", nil, nil
+}
+
+func (m *MockManagement) CleanupAPIKey(ctx context.Context, projectName string) error {
+	if m.CleanupAPIKeyFunc != nil {
+		return m.CleanupAPIKeyFunc(ctx, projectName)
+	}
+	return nil
+}
+
 func TestNewHandler(t *testing.T) {
-	// Skip this test for now
-	t.Skip("Skipping test due to dependency issues")
+	// Test data
+	allowedUsers := &[]string{"user1@example.com", "user2@example.com"}
+	allowedDomains := &[]string{"example.com", "test.com"}
+	clientID := "test-client-id"
+	clientSecret := "test-client-secret"
+	redirectURI := "http://localhost:8080/callback"
+
+	// Create mock dependencies
+	mockManagement := &MockManagement{}
+	mockOIDC := oidc.NewOIDC("test-project", allowedUsers, allowedDomains, "https://accounts.google.com", "https://www.googleapis.com/oauth2/v3/certs")
+
+	// Test NewHandler
+	h := NewHandler(allowedUsers, allowedDomains, clientID, clientSecret, redirectURI, mockManagement, mockOIDC)
+
+	// Verify result
+	if h == nil {
+		t.Fatal("Expected non-nil Handler")
+	}
+
+	if h.AllowedUsers != allowedUsers {
+		t.Errorf("Expected AllowedUsers to be %v, got %v", allowedUsers, h.AllowedUsers)
+	}
+
+	if h.AllowedDomains != allowedDomains {
+		t.Errorf("Expected AllowedDomains to be %v, got %v", allowedDomains, h.AllowedDomains)
+	}
+
+	if h.oauth2Config.ClientID != clientID {
+		t.Errorf("Expected ClientID to be %s, got %s", clientID, h.oauth2Config.ClientID)
+	}
+
+	if h.oauth2Config.ClientSecret != clientSecret {
+		t.Errorf("Expected ClientSecret to be %s, got %s", clientSecret, h.oauth2Config.ClientSecret)
+	}
+
+	if h.oauth2Config.RedirectURL != redirectURI {
+		t.Errorf("Expected RedirectURL to be %s, got %s", redirectURI, h.oauth2Config.RedirectURL)
+	}
 }
 
 func TestHandleError(t *testing.T) {
@@ -138,6 +201,35 @@ func TestHandleRoot(t *testing.T) {
 }
 
 func TestHandleRevoke(t *testing.T) {
-	// Skip this test for now
-	t.Skip("Skipping test due to dependency issues")
+	// Create mock management
+	mockManagement := &MockManagement{
+		CleanupAPIKeyFunc: func(ctx context.Context, projectName string) error {
+			if projectName != "test-project" {
+				t.Errorf("Expected project name to be 'test-project', got '%s'", projectName)
+			}
+			return nil
+		},
+	}
+
+	// Create mock OIDC
+	mockOIDC := oidc.NewOIDC("test-project", &[]string{}, &[]string{}, "", "")
+
+	// Create handler
+	h := &Handler{
+		management: mockManagement,
+		oidc:       mockOIDC,
+	}
+
+	// Create test request and response recorder
+	req := httptest.NewRequest("GET", "/revoke", nil)
+	w := httptest.NewRecorder()
+
+	// Test HandleRevoke
+	h.HandleRevoke(w, req)
+
+	// Verify response
+	resp := w.Result()
+	if resp.StatusCode != http.StatusOK {
+		t.Errorf("Expected status code %d, got %d", http.StatusOK, resp.StatusCode)
+	}
 }

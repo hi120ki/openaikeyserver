@@ -16,12 +16,12 @@ type Handler struct {
 	AllowedUsers   *[]string
 	AllowedDomains *[]string
 	oauth2Config   *oauth2.Config
-	management     *management.Management
+	management     management.Manager
 	oidc           *oidc.OIDC
 }
 
 // NewHandler initializes a new handler with the provided configuration.
-func NewHandler(allowedUsers *[]string, allowedDomains *[]string, clientID, clientSecret, redirectURI string, management *management.Management, oidc *oidc.OIDC) *Handler {
+func NewHandler(allowedUsers *[]string, allowedDomains *[]string, clientID, clientSecret, redirectURI string, management management.Manager, oidc *oidc.OIDC) *Handler {
 	return &Handler{
 		AllowedUsers:   allowedUsers,
 		AllowedDomains: allowedDomains,

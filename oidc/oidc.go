@@ -48,6 +48,11 @@ type GoogleIDTokenClaims struct {
 	Hd            string `json:"hd"`
 }
 
+// TokenVerifier defines the interface for token verification
+type TokenVerifier interface {
+	VerifyToken(ctx context.Context, aud string, idToken string) (*GoogleIDTokenClaims, error)
+}
+
 // DefaultTokenVerifier handles token verification
 type DefaultTokenVerifier struct {
 	issuerURL string
@@ -84,7 +89,7 @@ func (v *DefaultTokenVerifier) VerifyToken(ctx context.Context, aud string, idTo
 }
 
 // For testing purposes
-var createTokenVerifier = func(issuerURL, jwksURL string) *DefaultTokenVerifier {
+var createTokenVerifier = func(issuerURL, jwksURL string) TokenVerifier {
 	return NewDefaultTokenVerifier(issuerURL, jwksURL)
 }
 

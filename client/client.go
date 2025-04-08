@@ -11,6 +11,15 @@ import (
 	"net/url"
 )
 
+// APIClient defines the interface for API operations
+type APIClient interface {
+	GetProject(ctx context.Context, projectName string) (*Project, bool, error)
+	CreateProject(ctx context.Context, name string) (*Project, error)
+	CreateServiceAccount(ctx context.Context, projectID string, name string) (*ServiceAccount, error)
+	ListServiceAccounts(ctx context.Context, projectID string) (*[]ServiceAccount, error)
+	DeleteServiceAccount(ctx context.Context, projectID string, serviceAccountID string) (*DeletedServiceAccountResponse, error)
+}
+
 // HTTPClient defines the interface for making HTTP requests.
 type HTTPClient interface {
 	Do(req *http.Request) (*http.Response, error)

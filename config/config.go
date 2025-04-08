@@ -10,17 +10,19 @@ import (
 
 // Config holds application configuration loaded from environment variables.
 type Config struct {
-	AllowedUsers        string `envconfig:"ALLOWED_USERS"`
-	AllowedDomains      string `envconfig:"ALLOWED_DOMAINS"`
-	OpenAIManagementKey string `envconfig:"OPENAI_MANAGEMENT_KEY"`
-	ClientID            string `envconfig:"CLIENT_ID"`
-	ClientSecret        string `envconfig:"CLIENT_SECRET"`
-	RedirectURI         string `envconfig:"REDIRECT_URI"`
-	DefaultProjectName  string `envconfig:"DEFAULT_PROJECT_NAME" default:"personal"`
-	Port                string `envconfig:"PORT" default:"8080"`
-	Expiration          int    `envconfig:"EXPIRATION" default:"86400"`      // 24 hours
-	CleanupInterval     int    `envconfig:"CLEANUP_INTERVAL" default:"3600"` // 1 hour
-	Timeout             int    `envconfig:"TIMEOUT" default:"10"`            // 10 seconds
+	AllowedUsers         string `envconfig:"ALLOWED_USERS"`
+	AllowedDomains       string `envconfig:"ALLOWED_DOMAINS"`
+	OpenAIManagementKey  string `envconfig:"OPENAI_MANAGEMENT_KEY"`
+	ClientID             string `envconfig:"CLIENT_ID"`
+	ClientSecret         string `envconfig:"CLIENT_SECRET"`
+	RedirectURI          string `envconfig:"REDIRECT_URI"`
+	DefaultProjectName   string `envconfig:"DEFAULT_PROJECT_NAME" default:"personal"`
+	Port                 string `envconfig:"PORT" default:"8080"`
+	Expiration           int    `envconfig:"EXPIRATION" default:"86400"`      // 24 hours
+	CleanupInterval      int    `envconfig:"CLEANUP_INTERVAL" default:"3600"` // 1 hour
+	Timeout              int    `envconfig:"TIMEOUT" default:"10"`            // 10 seconds
+	GoogleTokenIssuerURL string `envconfig:"GOOGLE_TOKEN_ISSUER_URL" default:"https://accounts.google.com"`
+	GoogleTokenJwksURL   string `envconfig:"GOOGLE_TOKEN_AUDIENCE" default:"https://www.googleapis.com/oauth2/v3/certs"`
 }
 
 // NewConfig creates and validates a new configuration from environment variables.
@@ -115,4 +117,14 @@ func (c *Config) GetCleanupInterval() time.Duration {
 // GetTimeout returns the HTTP client timeout duration.
 func (c *Config) GetTimeout() time.Duration {
 	return time.Duration(c.Timeout) * time.Second
+}
+
+// GetGoogleTokenIssuerURL returns the Google token issuer URL.
+func (c *Config) GetGoogleTokenIssuerURL() string {
+	return c.GoogleTokenIssuerURL
+}
+
+// GetGoogleTokenJwksURL returns the Google token JWKS URL.
+func (c *Config) GetGoogleTokenJwksURL() string {
+	return c.GoogleTokenJwksURL
 }

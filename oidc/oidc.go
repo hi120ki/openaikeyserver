@@ -9,26 +9,23 @@ import (
 	"github.com/coreos/go-oidc/v3/oidc"
 )
 
-const (
-	// googleTokenIssuerURL is the issuer URL for Google OIDC tokens.
-	googleTokenIssuerURL = "https://accounts.google.com"
-	// googleTokenJwksURL is the JWKS URL for Google OIDC tokens.
-	googleTokenJwksURL = "https://www.googleapis.com/oauth2/v3/certs"
-)
-
 // OIDC handles OpenID Connect authentication and authorization.
 type OIDC struct {
-	defaultProjectName string    // Default project name for API key creation
-	allowedUsers       *[]string // List of allowed user emails
-	allowedDomains     *[]string // List of allowed email domains
+	defaultProjectName   string    // Default project name for API key creation
+	allowedUsers         *[]string // List of allowed user emails
+	allowedDomains       *[]string // List of allowed email domains
+	googleTokenIssuerURL string    // Google token issuer URL
+	googleTokenJwksURL   string    // Google token JWKS URL
 }
 
 // NewOIDC creates a new OIDC client with the specified configuration.
-func NewOIDC(defaultProjectName string, allowedUsers *[]string, allowedDomains *[]string) *OIDC {
+func NewOIDC(defaultProjectName string, allowedUsers *[]string, allowedDomains *[]string, googleTokenIssuerURL string, googleTokenJwksURL string) *OIDC {
 	return &OIDC{
-		defaultProjectName: defaultProjectName,
-		allowedUsers:       allowedUsers,
-		allowedDomains:     allowedDomains,
+		defaultProjectName:   defaultProjectName,
+		allowedUsers:         allowedUsers,
+		allowedDomains:       allowedDomains,
+		googleTokenIssuerURL: googleTokenIssuerURL,
+		googleTokenJwksURL:   googleTokenJwksURL,
 	}
 }
 
@@ -76,7 +73,7 @@ func (o *OIDC) verifyGoogleOIDCToken(ctx context.Context, aud string, idToken st
 		ClientID: aud,
 	}
 
-	verifier := oidc.NewVerifier(googleTokenIssuerURL, oidc.NewRemoteKeySet(ctx, googleTokenJwksURL), config)
+	verifier := oidc.NewVerifier(o.googleTokenIssuerURL, oidc.NewRemoteKeySet(ctx, o.googleTokenJwksURL), config)
 
 	token, err := verifier.Verify(ctx, idToken)
 	if err != nil {

@@ -6,7 +6,7 @@ require (
 	github.com/coreos/go-oidc/v3 v3.14.1
 	github.com/joho/godotenv v1.5.1
 	github.com/kelseyhightower/envconfig v1.4.0
-	golang.org/x/oauth2 v0.30.0
+	golang.org/x/oauth2 v0.31.0
 )
 
 require (
